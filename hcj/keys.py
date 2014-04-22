@@ -1,4 +1,5 @@
 from pippi import dsp
+from pippi import tune
 
 def yourlove(length=22050, i=0, bar=5, amp=0.5, chords=None, root='a', octave=3):
     """ Inspired by Terre """

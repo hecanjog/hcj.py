@@ -85,40 +85,4 @@ def clap(length=22050, i=0, bar=5, amp=0.5):
 
     return k
 
-def hat(length=22050, i=0, bar=5, amp=0.5):
-    wav = dsp.wavetable('sine2pi', 512)
-    win = dsp.wavetable('sine', 512)
-    mod = dsp.wavetable('phasor', 512)
-
-    chords = [
-        ['e', 'g#', 'a'],
-        ['e', 'd', 'a'],
-        ['c#', 'b', 'a', 'f#'],
-    ]
-
-    pw = dsp.rand(0.1, 1)
-
-    roots = chords[i % len(chords)]
-    roots = [ tune.ntf(n) for n in roots ]
-
-    klen = length / dsp.randint(1, 4)
-
-    amp = dsp.rand(0.3, 0.5)
-
-    mFreq = dsp.rand(0.5, 1.0) / dsp.fts(klen)
-
-    layers = []
-
-    for root in roots:
-        k = dsp.pulsar(root, klen, pw, wav, win, mod, 0.005, mFreq, amp) 
-        k = dsp.env(k, 'sine')
-        k = dsp.pan(k, dsp.rand())
-        k = dsp.pad(k, 0, length - klen)
-
-        layers += [ k ]
-
-    out = dsp.mix(layers)
-
-    return out
-
 

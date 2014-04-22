@@ -52,11 +52,10 @@ def rhodes(length=22050, freq=220.0, amp=0.5):
     for plist in partials:
         partial = dsp.tone(freq=plist[0] * freq, length=length, amp=plist[1] * amp)
 
-        env_length = (total_time * plist[2] * 2) / 32 
+        env_length = (length * plist[2] * 2) / 32 
         wtable = dsp.wavetable('hann', int(env_length))
         wtable = wtable[int(env_length / 2):]
         wtable.extend([0 for i in range(length - len(wtable))])
-        print env_length, len(wtable), dsp.flen(partial)
         
         partial = dsp.split(partial, 32)
         partial = [ dsp.amp(partial[i], wtable[i]) for i in range(len(partial)) ]
@@ -68,5 +67,5 @@ def rhodes(length=22050, freq=220.0, amp=0.5):
     noise = dsp.amp(dsp.bln(dsp.flen(out) * 2, 2000, 20000), 0.005)
     noise = dsp.fill(noise, dsp.flen(out))
 
-    out = dsp.mix([out, noise])
+    return dsp.mix([out, noise])
 

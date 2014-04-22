@@ -1,7 +1,22 @@
+"""
+Most drums follow this (named) param format:
+    length
+    i
+    bar
+    amp
+
+'i' is meant to be an arbitrary index - probably the count of the current beat.
+'bar' is used as a modulo on 'i', to facilitate pattern creation and junk.
+
+Every drum can be called with no params and it will return /something/ without 
+complaining. It's cooler to tell them to do something though.
+
+"""
+
 from pippi import dsp
 from pippi import tune
 
-def sinekick(amp, length):
+def sinekick(length=22050, i=0, bar=5, amp=0.5):
     if amp == 0:
         return dsp.pad('', 0, length)
 
@@ -25,7 +40,7 @@ def sinekick(amp, length):
     out = dsp.amp(out, amp)
     return dsp.env(out, 'phasor')
 
-def kick(length, i=0):
+def kick(length=22050, i=0, bar=5, amp=0.5):
     wav = dsp.breakpoint([0] + [ dsp.rand(-1,1) for w in range(20) ] + [0], 512)
     win = dsp.wavetable('sine', 512)
     mod = dsp.wavetable('phasor', 512)
@@ -40,7 +55,7 @@ def kick(length, i=0):
 
     k = dsp.pulsar(root, klen, pw, wav, win, mod, 2.0, mFreq, amp)
 
-    k = dsp.mix([ sinekick(dsp.rand(0.4, 0.7), klen), k ])
+    k = dsp.mix([ sinekick(amp=dsp.rand(0.4, 0.7), length=klen), k ])
 
     k = dsp.env(k, 'phasor')
 
@@ -48,7 +63,7 @@ def kick(length, i=0):
 
     return k
 
-def clap(length, i=0):
+def clap(length=22050, i=0, bar=5, amp=0.5):
     wav = dsp.breakpoint([0] + [ dsp.rand(-1,1) for w in range(50) ] + [0], 512)
     win = dsp.wavetable('sine', 512)
     mod = dsp.wavetable('phasor', 512)
@@ -70,7 +85,7 @@ def clap(length, i=0):
 
     return k
 
-def hat(length, i=0):
+def hat(length=22050, i=0, bar=5, amp=0.5):
     wav = dsp.wavetable('sine2pi', 512)
     win = dsp.wavetable('sine', 512)
     mod = dsp.wavetable('phasor', 512)

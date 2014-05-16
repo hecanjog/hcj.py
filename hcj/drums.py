@@ -63,14 +63,14 @@ def kick(length=22050, i=0, bar=5, amp=0.5):
 
     return k
 
-def clap(length=22050, i=0, bar=5, amp=0.5):
+def clap(length=22050, i=0, bar=5, amp=0.5, root=3000.0, pw=None):
     wav = dsp.breakpoint([0] + [ dsp.rand(-1,1) for w in range(50) ] + [0], 512)
     win = dsp.wavetable('sine', 512)
     mod = dsp.wavetable('phasor', 512)
 
-    root = 3000.0
     klen = length / dsp.randint(2, 5) 
-    pw = dsp.rand(0.1, 1)
+    if pw is None:
+        pw = dsp.rand(0.1, 1)
 
     amp = dsp.rand(0.75, 1.0)
 

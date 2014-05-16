@@ -1,7 +1,7 @@
 from pippi import dsp
 from pippi import tune
 
-def yourlove(length=22050, i=0, bar=5, amp=0.5, chords=None, root='a', octave=3):
+def yourlove(length=22050, i=0, bar=5, amp=0.5, chords=None, root='a', octave=3, maxdiv=4, mindiv=1):
     """ Inspired by Terre """
     wav = dsp.wavetable('sine2pi', 512)
     win = dsp.wavetable('sine', 512)
@@ -19,7 +19,7 @@ def yourlove(length=22050, i=0, bar=5, amp=0.5, chords=None, root='a', octave=3)
     notes = chords[i % len(chords)]
     notes = tune.fromdegrees(notes, root=root, octave=octave)
 
-    klen = length / dsp.randint(1, 4)
+    klen = length / dsp.randint(mindiv, maxdiv)
 
     amp = dsp.rand(0.3, 0.5)
 
@@ -50,9 +50,12 @@ def rhodes(length=22050, freq=220.0, amp=0.5):
 
     layers = []
     for plist in partials:
-        partial = dsp.tone(freq=plist[0] * freq, length=length, amp=plist[1] * amp)
+        partial = dsp.tone(freq=plist[0] * freq, length=length, amp=plist[1])
 
         env_length = (length * plist[2] * 2) / 32 
+        if env_length <= 2:
+            env_length = 4
+
         wtable = dsp.wavetable('hann', int(env_length))
         wtable = wtable[int(env_length / 2):]
         wtable.extend([0 for i in range(length - len(wtable))])
@@ -67,5 +70,19 @@ def rhodes(length=22050, freq=220.0, amp=0.5):
     noise = dsp.amp(dsp.bln(dsp.flen(out) * 2, 2000, 20000), 0.005)
     noise = dsp.fill(noise, dsp.flen(out))
 
-    return dsp.mix([out, noise])
+    out = dsp.mix([out, noise])
+    out = dsp.amp(out, amp)
 
+    return out
+
+def chippy(length=22050, freq=220, amp=0.5):
+    wfrm = dsp.wavetable('tri', 512)
+    wndw = dsp.wavetable('tri', 512)
+    modw = [ 1 for u in range(256) ] + [ 0 for d in range(256) ]
+    modr = 1
+    modf = 14
+    pw = dsp.rand()
+
+    out = dsp.pulsar(freq, length, pw, wfrm, wndw, modw, modr, modf, amp)
+
+    return out

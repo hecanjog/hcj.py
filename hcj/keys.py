@@ -76,11 +76,11 @@ def rhodes(length=22050, freq=220.0, amp=0.5):
     return out
 
 def chippy(length=22050, freq=220, amp=0.5):
-    wfrm = dsp.wavetable('tri', 512)
+    wfrm = dsp.wavetable('sine2pi', 512)
     wndw = dsp.wavetable('tri', 512)
     modw = [ 1 for u in range(256) ] + [ 0 for d in range(256) ]
     modr = 1
-    modf = 14
+    modf = dsp.rand(10, 20)
     pw = dsp.rand()
 
     out = dsp.pulsar(freq, length, pw, wfrm, wndw, modw, modr, modf, amp)

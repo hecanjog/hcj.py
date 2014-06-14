@@ -16,6 +16,41 @@ complaining. It's cooler to tell them to do something though.
 from pippi import dsp
 from pippi import tune
 
+def parsebeat(pattern, beat, length, callback=None):
+    b = (beat * 4) / pattern[0]
+    nbeats = length / b
+    p = [ pattern[1][ i % len(pattern[1])] for i in range(nbeats) ]
+
+    beats = []
+    current = 0
+    for i, n in enumerate(p):
+        current += b
+
+        if n == 'x' or n == '-':
+            btype = 1
+        else:
+            btype = 0
+
+        next = None
+        if i < len(p) - 1:
+            next = p[i + 1]
+
+        transition = ((n == 'x' or n == '-') and (next == ' ' or next == 'x')) or (n == ' ' and next == 'x')
+
+        if transition or next is None:
+            beats += [ (btype, current) ]
+            current = 0
+
+    out = ''
+    for i, b in enumerate(beats):
+        if b[0] == 1:
+            out += callback(i, b[1])
+        else:
+            out += dsp.pad('', 0, b[1])
+
+    return out
+
+
 def sinekick(length=22050, i=0, bar=5, amp=0.5):
     if amp == 0:
         return dsp.pad('', 0, length)

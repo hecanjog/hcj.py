@@ -2,11 +2,9 @@
 Most drums follow this (named) param format:
     length
     i
-    bar
     amp
 
 'i' is meant to be an arbitrary index - probably the count of the current beat.
-'bar' is used as a modulo on 'i', to facilitate pattern creation and junk.
 
 Every drum can be called with no params and it will return /something/ without 
 complaining. It's cooler to tell them to do something though.
@@ -16,42 +14,45 @@ complaining. It's cooler to tell them to do something though.
 from pippi import dsp
 from pippi import tune
 
-def parsebeat(pattern, beat, length, callback=None):
-    b = (beat * 4) / pattern[0]
-    nbeats = length / b
-    p = [ pattern[1][ i % len(pattern[1])] for i in range(nbeats) ]
+def parsebeat(pattern, division, beat, length, callback):
+    subbeat = (beat * 4) / division
+    nbeats = length / subbeat
+
+    pattern = [ pattern[ i % len(pattern)] for i in range(nbeats) ]
 
     beats = []
-    current = 0
-    for i, n in enumerate(p):
-        current += b
+    elapsed = 0
+    for i, glyph in enumerate(pattern):
+        elapsed += subbeat
 
-        if n == 'x' or n == '-':
-            btype = 1
+        if glyph == 'x' or glyph == '-':
+            glyph_type = 1
         else:
-            btype = 0
+            glyph_type = 0
 
         next = None
-        if i < len(p) - 1:
-            next = p[i + 1]
+        if i < len(pattern) - 1:
+            next = pattern[i + 1]
 
-        transition = ((n == 'x' or n == '-') and (next == ' ' or next == 'x')) or (n == ' ' and next == 'x')
+        transition = ((glyph == 'x' or glyph == '-') and (next == ' ' or next == 'x')) or (glyph == ' ' and next == 'x')
 
         if transition or next is None:
-            beats += [ (btype, current) ]
-            current = 0
+            beats += [ (glyph_type, elapsed) ]
+            elapsed = 0
 
     out = ''
-    for i, b in enumerate(beats):
-        if b[0] == 1:
-            out += callback(i, b[1])
+    for i, (amp, length) in enumerate(beats):
+        if amp < 0:
+            out += callback(length, i)
         else:
-            out += dsp.pad('', 0, b[1])
+            out += dsp.pad('', 0, length)
+
+    out = [ callback(length, i=i, amp=amp) if amp > 0 else dsp.pad('', 0, length) for i, (amp, length) in enumerate(beats) ]
+    out = ''.join(out)
 
     return out
 
-
-def sinekick(length=22050, i=0, bar=5, amp=0.5):
+def sinekick(length=22050, i=0, amp=0.5):
     if amp == 0:
         return dsp.pad('', 0, length)
 
@@ -75,7 +76,7 @@ def sinekick(length=22050, i=0, bar=5, amp=0.5):
     out = dsp.amp(out, amp)
     return dsp.env(out, 'phasor')
 
-def kick(length=22050, i=0, bar=5, amp=0.5):
+def kick(length=22050, i=0, amp=0.5):
     wav = dsp.breakpoint([0] + [ dsp.rand(-1,1) for w in range(20) ] + [0], 512)
     win = dsp.wavetable('sine', 512)
     mod = dsp.wavetable('phasor', 512)
@@ -98,7 +99,7 @@ def kick(length=22050, i=0, bar=5, amp=0.5):
 
     return k
 
-def clap(length=22050, i=0, bar=5, amp=0.5, root=3000.0, pw=None):
+def clap(length=22050, i=0, amp=0.5, root=3000.0, pw=None):
     wav = dsp.breakpoint([0] + [ dsp.rand(-1,1) for w in range(50) ] + [0], 512)
     win = dsp.wavetable('sine', 512)
     mod = dsp.wavetable('phasor', 512)

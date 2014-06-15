@@ -14,7 +14,7 @@ complaining. It's cooler to tell them to do something though.
 from pippi import dsp
 from pippi import tune
 
-def parsebeat(pattern, division, beat, length, callback):
+def parsebeat(pattern, division, beat, length, callback, swing=0):
     subbeat = (beat * 4) / division
     nbeats = length / subbeat
 
@@ -22,6 +22,7 @@ def parsebeat(pattern, division, beat, length, callback):
 
     beats = []
     elapsed = 0
+
     for i, glyph in enumerate(pattern):
         elapsed += subbeat
 
@@ -42,13 +43,17 @@ def parsebeat(pattern, division, beat, length, callback):
 
     out = ''
     for i, (amp, length) in enumerate(beats):
-        if amp < 0:
-            out += callback(length, i)
+        if amp > 0:
+            if i % 2 == 1 and swing > 0:
+                swing_percent = (swing / 100.0) * 0.75 # actual range is 0 - 75%
+                delay_length = int(length * swing_percent)
+                o = callback(length - delay_length, i=i, amp=amp)
+                o = dsp.pad(o, delay_length, 0)
+                out += o
+            else:
+                out += callback(length, i=i, amp=amp)
         else:
             out += dsp.pad('', 0, length)
-
-    out = [ callback(length, i=i, amp=amp) if amp > 0 else dsp.pad('', 0, length) for i, (amp, length) in enumerate(beats) ]
-    out = ''.join(out)
 
     return out
 

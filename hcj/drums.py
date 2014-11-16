@@ -42,18 +42,18 @@ def parsebeat(pattern, division, beat, length, callback, swing=0):
             elapsed = 0
 
     out = ''
-    for i, (amp, length) in enumerate(beats):
+    for i, (amp, beat_length) in enumerate(beats):
         if amp > 0:
             if i % 2 == 1 and swing > 0:
                 swing_percent = (swing / 100.0) * 0.75 # actual range is 0 - 75%
-                delay_length = int(length * swing_percent)
-                o = callback(length - delay_length, i=i, amp=amp)
+                delay_length = int(beat_length * swing_percent)
+                o = callback(beat_length - delay_length, i=i, amp=amp)
                 o = dsp.pad(o, delay_length, 0)
                 out += o
             else:
-                out += callback(length, i=i, amp=amp)
+                out += callback(beat_length, i=i, amp=amp)
         else:
-            out += dsp.pad('', 0, length)
+            out += dsp.pad('', 0, beat_length)
 
     return out
 

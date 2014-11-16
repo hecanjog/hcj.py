@@ -1,6 +1,36 @@
 from pippi import dsp
 from pippi import tune
 
+def pulsar(freq, length=22050, drift=0.01, speed=0.5, amp=0.1, pulsewidth=None, env='flat', wf=None, mod=None):
+    if wf is None:
+        waveform = dsp.wavetable('sine2pi')
+    else:
+        waveform = wf
+
+    window = dsp.wavetable('sine')
+
+    if mod is None:
+        mod = [ dsp.rand(0, 1) for i in range(10) ]
+
+    modrange = dsp.rand(0, drift)
+    modfreq = dsp.rand(0.0001, speed)
+    pulsewidth = dsp.rand(0.1, 1) if pulsewidth is None else pulsewidth
+
+    out = dsp.pulsar(freq, length, pulsewidth, waveform, window, mod, modrange, modfreq, amp)
+
+    out = dsp.pan(out, dsp.rand())
+    out = dsp.env(out, env)
+
+    return out
+
+def pulsars(chord, length=22050, drift=0.01, speed=0.5, amp=0.1, pulsewidth=None, env='flat', key='c', octave=3):
+    freqs = tune.chord(chord, key, octave)
+    return dsp.mix([ pulsar(freq, length, drift, speed, amp, pulsewidth, env) for freq in freqs ])
+
+def pulsar_seq(chords, length=22050, drift=0.01, speed=0.5, amp=0.1, pulsewidth=None, env='flat', key='c', octave=3):
+    chords = chords.split(' ')
+    return dsp.cross([ pulsars(chord, length, drift, speed, amp, pulsewidth, env) for chord in chords ], 50, 80)
+
 def yourlove(length=22050, i=0, bar=5, amp=0.5, chords=None, root='a', octave=3, maxdiv=4, mindiv=1):
     """ Inspired by Terre """
     wav = dsp.wavetable('sine2pi', 512)

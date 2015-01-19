@@ -38,50 +38,32 @@ def rb(snd, length=None, speed=None, hz=None, interval=None, ratios=None, crisp=
 
     return out
 
-def stretch(snd, length=None, speed=None, interval=None, ratios=None, grain_size=60):
+def stretch(snd, length=None, speed=None, grain_size=60):
     original_length = dsp.flen(snd)
 
     if speed is not None:
         snd = dsp.transpose(snd, speed)
-    elif interval is not None:
-        if ratios is None:
-            ratios = tune.terry
-        
-        speed = dsp.interval2speed(interval, ratios)
-        snd = dsp.transpose(snd, speed) 
 
     current_length = dsp.flen(snd)
 
     if original_length != current_length or length is not None:
         grain_size = dsp.mstf(grain_size)
-
         numgrains = length / (grain_size / 2)
-        block_size = original_length / numgrains
-        left = []
-        right = []
+        block_size = current_length / numgrains
 
+        grains = []
         original_position = 0
-
         count = 0
+
         while count <= numgrains:
             grain = dsp.cut(snd, original_position, grain_size)
-            grain = dsp.env(grain, 'hann')
 
-            if count == 1:
-                right += [ dsp.pad('', 0, grain_size / 2) ]
-
-            if count % 2 == 0:
-                left += [ grain ]
-            else:
-                right += [ grain ]
+            grains += [ grain ]
 
             original_position += block_size
             count += 1
 
-        left = ''.join(left) 
-        right = ''.join(right) 
-
-        snd = dsp.mix([left, right])
+        snd = dsp.cross(grains, dsp.ftms(grain_size / 2))
 
     return snd
 

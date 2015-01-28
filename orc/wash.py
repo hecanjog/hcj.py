@@ -38,13 +38,15 @@ def play(ctl):
 
     freqs = dsp.randchoose(gamut[area])
 
-    low = lpd.get(1, low=10, high=5000)
-    high = lpd.get(2, low=200, high=15000)
+    freqscale = lpd.get(4, low=0.125, high=2, default=1)
 
-    low = freqs[0]
-    high = freqs[1]
+    low = freqs[0] * freqscale
+    high = freqs[1] * freqscale
 
-    wform = 'sine2pi'
+    wform = dsp.randchoose(['sine2pi', 'tri', 'vary', 'square'])
+
+    timescale = lpd.get(2, low=1, high=4, default=1)
+    lengthscale = lpd.get(5, low=0.125, high=2.5)
 
     amp = lpd.get(3)
 
@@ -52,7 +54,7 @@ def play(ctl):
         low = dsp.rand(low * 0.9, low)
         high = dsp.rand(high, high * 1.1)
 
-        length = dsp.stf(dsp.rand(0.01, 0.3))
+        length = dsp.stf(dsp.rand(0.01, 0.3) * lengthscale)
         out = dsp.bln(length, low, high, wform)
         out = dsp.env(out, 'phasor')
 
@@ -60,7 +62,7 @@ def play(ctl):
             beep = dsp.tone(dsp.flen(out), high * 2, amp=dsp.rand(0.5, 1))
             out = dsp.mix([out, beep])
 
-        out = dsp.pad(out, 0, dsp.mstf(dsp.rand(1, 200)))
+        out = dsp.pad(out, 0, dsp.mstf(dsp.rand(1, 200) * timescale))
         out = out * dsp.randint(1, 8)
         out = dsp.drift(out, dsp.rand(0, 1))
 
@@ -68,29 +70,41 @@ def play(ctl):
         low = dsp.rand(low * 0.9, low)
         high = dsp.rand(high, high * 1.1)
 
-        length = dsp.stf(dsp.rand(0.01, 0.5))
+        length = dsp.stf(dsp.rand(0.01, 0.5) * lengthscale)
         out = dsp.bln(length, low, high, wform)
         out = dsp.env(out, 'random')
+
+        if timescale > 1:
+            out = dsp.pad(out, 0, dsp.mstf(500 * timescale * dsp.rand(0.5, 1.5)))
+
 
     elif area == 'pitch':
         low = dsp.rand(low * 0.9, low)
         high = dsp.rand(high, high * 1.1)
 
-        length = dsp.stf(dsp.rand(0.01, 0.5))
+        length = dsp.stf(dsp.rand(0.01, 0.5) * lengthscale)
         out = dsp.bln(length, low, high, wform)
         out = dsp.env(out, 'random')
+
+        if timescale > 1:
+            out = dsp.pad(out, 0, dsp.mstf(500 * timescale * dsp.rand(0.5, 1.5)))
+
 
     elif area == 'low':
         low = dsp.rand(low * 0.9, low)
         high = dsp.rand(high, high * 1.1)
 
-        length = dsp.stf(dsp.rand(0.2, 2))
+        length = dsp.stf(dsp.rand(0.2, 2) * lengthscale)
         out = dsp.bln(length, low, high, wform)
         out = dsp.env(out, 'random')
         out = dsp.mix([out, dsp.tone(length, low)])
 
-    if dsp.rand() > 0.75:
-        plength = length * dsp.randint(2, 6) 
+        if timescale > 1:
+            out = dsp.pad(out, 0, dsp.mstf(500 * timescale * dsp.rand(0.5, 1.5)))
+
+
+    if dsp.rand() > lpd.get(6, low=0, high=1, default=0.75):
+        plength = length * dsp.randint(2, 6)
         freq = tune.ntf(param.get('key', default='d'), octave=dsp.randint(0, 4))
         out = dsp.mix([ dsp.pine(out, plength, freq), dsp.pine(out, plength, freq * 1.25) ])
         out = dsp.fill(out, length)

@@ -19,6 +19,6 @@ def play(ctl):
     else:
         area = areas[area]
 
-    param.set('wash-area', area)
+    param.set('wash-area', area, throttle=1)
 
     return dsp.pad('', 0, dsp.mstf(100))

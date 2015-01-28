@@ -55,6 +55,11 @@ def play(ctl):
         length = dsp.stf(dsp.rand(0.01, 0.3))
         out = dsp.bln(length, low, high, wform)
         out = dsp.env(out, 'phasor')
+
+        if dsp.rand() > 0.5:
+            beep = dsp.tone(dsp.flen(out), high * 2, amp=dsp.rand(0.5, 1))
+            out = dsp.mix([out, beep])
+
         out = dsp.pad(out, 0, dsp.mstf(dsp.rand(1, 200)))
         out = out * dsp.randint(1, 8)
         out = dsp.drift(out, dsp.rand(0, 1))
@@ -84,10 +89,12 @@ def play(ctl):
         out = dsp.env(out, 'random')
         out = dsp.mix([out, dsp.tone(length, low)])
 
-    if dsp.rand() > 0.5:
-        length = length * 4
-        freq = low * 2
-        out = dsp.pine(out, length, freq)
+    if dsp.rand() > 0.75:
+        plength = length * dsp.randint(2, 6) 
+        freq = tune.ntf(param.get('key', default='d'), octave=dsp.randint(0, 4))
+        out = dsp.mix([ dsp.pine(out, plength, freq), dsp.pine(out, plength, freq * 1.25) ])
+        out = dsp.fill(out, length)
+
 
     out = dsp.pan(out, dsp.rand())
     out = dsp.amp(out, amp)

@@ -11,13 +11,13 @@ def play(ctl):
 
     key = param.get('key', default='d')
 
-    chords = param.get('chords', default='I.ii.vi.V').split('.')
+    chords = param.get('chords', default='I9.ii.vi.V').split('.')
 
     chord_index = param.get('chord_index', default=0)
-    chord = tune.chord(chords[chord_index % len(chords)], key, octave=2)
+    chord = tune.chord(chords[chord_index % len(chords)], key, octave=3)
     chord.reverse()
 
-    reps = param.get('reps', default=4)
+    reps = param.get('reps', default=8)
     rep = param.get('rep', default=0)
 
     freq = chord[int(rep) % len(chord)]
@@ -33,7 +33,7 @@ def play(ctl):
     mod = [ dsp.rand(0, 1) for m in range(512) ]
     modr = dsp.rand(0.01, 0.05)
     modf = dsp.rand(0.5, 2)
-    amp = 0.3
+    amp = 0.8
 
     out = dsp.pulsar(freq, length, pw, wf, win, mod, modr, modf, amp)
 

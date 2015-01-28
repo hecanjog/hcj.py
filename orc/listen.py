@@ -12,4 +12,13 @@ def play(ctl):
         dsp.log(lpd.get(36)) 
         param.set('chord_index', chord_index + 1)
 
+    areas = ['high', 'pitch', 'mid', 'low']
+    area = lpd.geti(1, low=0, high=len(areas), default=len(areas))
+    if area == len(areas):
+        area = dsp.randchoose(areas)
+    else:
+        area = areas[area]
+
+    param.set('wash-area', area)
+
     return dsp.pad('', 0, dsp.mstf(100))

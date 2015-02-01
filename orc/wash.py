@@ -1,7 +1,7 @@
 from pippi import dsp
 from pippi import tune
 
-midi = {'lpd': 1}
+midi = {'lpd': 3}
 
 def play(ctl):
     param = ctl.get('param')
@@ -58,12 +58,12 @@ def play(ctl):
         out = dsp.bln(length, low, high, wform)
         out = dsp.env(out, 'phasor')
 
-        if dsp.rand() > 0.5:
+        if dsp.rand() > 10.5:
             beep = dsp.tone(dsp.flen(out), high * 2, amp=dsp.rand(0.5, 1))
             out = dsp.mix([out, beep])
 
         out = dsp.pad(out, 0, dsp.mstf(dsp.rand(1, 400) * timescale))
-        out = out * dsp.randint(1, 8)
+        out = out * dsp.randint(1, 3)
         out = dsp.drift(out, dsp.rand(0, 1))
 
     elif area == 'mid':
@@ -105,10 +105,9 @@ def play(ctl):
 
     if dsp.rand() > lpd.get(6, low=0, high=1, default=0.75):
         plength = length * dsp.randint(2, 6)
-        freq = tune.ntf(param.get('key', default='d'), octave=dsp.randint(0, 4))
+        freq = tune.ntf(param.get('key', default='g'), octave=dsp.randint(0, 4))
         out = dsp.mix([ dsp.pine(out, plength, freq), dsp.pine(out, plength, freq * 1.25) ])
         out = dsp.fill(out, length)
-
 
     out = dsp.pan(out, dsp.rand())
     out = dsp.amp(out, amp)

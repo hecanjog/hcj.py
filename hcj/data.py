@@ -26,6 +26,9 @@ class Logistic():
 
         return val
 
+    def geti(self, low=0, high=1):
+        return self.get(low, high, trunc=True)
+
     def shuffle(self, items):
         shuffled = []
 

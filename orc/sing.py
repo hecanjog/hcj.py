@@ -8,7 +8,7 @@ def play(ctl):
     lpd = ctl.get('midi').get('lpd')
 
     freqs = [25, 55, 109, 222, 440, 550, 660, 770, 880]
-    freqs = [440]
+    freqs = [55, 110, 440, 220, 880]
     length = dsp.mstf(dsp.rand(100, 2000))
     length = dsp.mstf(3000)
 
@@ -17,7 +17,7 @@ def play(ctl):
         freq = freq * 4 + dsp.rand(0.1, 1.5)
 
         if freq < 100:
-            amp = 0.1
+            amp = 0.3
         else:
             amp = 0.01
 

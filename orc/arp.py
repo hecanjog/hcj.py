@@ -18,7 +18,7 @@ def play(ctl):
     #bd = dsp.transpose(bd, dsp.rand(0.65, 0.72) / 1)
     bd = dsp.transpose(bd, dsp.rand(0.3, 0.32) / 1)
 
-    chord = tune.fromdegrees([1,3,5], root='e', octave=3)
+    chord = tune.fromdegrees([1,5,8,9], root='c', octave=dsp.randint(0,3))
     chord.reverse()
     chord = dsp.rotate(chord, lpd.geti(4, low=0, high=len(chord)-1))
     #chord = dsp.randshuffle(chord)
@@ -27,7 +27,7 @@ def play(ctl):
     rep = param.get('rep', default=0)
     beat = dsp.bpm2frames(130) / 4
     beat = dsp.mstf(4100) / 32
-    length = beat
+    #length = beat
 
     out = ''
     for n in range(4):
@@ -37,7 +37,7 @@ def play(ctl):
             freq *= 2**dsp.randint(0, lpd.geti(6, low=0, high=8, default=0))
 
         pw = lpd.get(1, low=0.1, high=1, default=1)
-        #length = dsp.mstf(lpd.get(2, low=50, high=500, default=500))
+        length = dsp.mstf(lpd.get(2, low=50, high=2500, default=500) * dsp.rand(0.5, 2))
 
         wf = dsp.wavetable('tri', 512)
         wf = dsp.wavetable('impulse', 512)
@@ -52,10 +52,10 @@ def play(ctl):
 
         modf = dsp.rand(0.5, 2)
 
-        amp = lpd.get(3, low=0, high=0.5, default=0)
+        amp = lpd.get(3, low=0, high=2, default=0)
 
         o = dsp.pulsar(freq, length, pw, wf, win, mod, modr, modf, amp)
-        o = dsp.env(o, 'phasor')
+        o = dsp.env(o, 'hann')
         o = dsp.taper(o, dsp.mstf(10))
         o = dsp.pan(o, dsp.rand())
 
@@ -63,7 +63,7 @@ def play(ctl):
 
         out += o
 
-    out = dsp.mix([ dsp.fill(bd, dsp.flen(out), silence=True), out ])
+    #out = dsp.mix([ dsp.fill(bd, dsp.flen(out), silence=True), out ])
 
     param.set('rep', (rep + 1) % reps)
 

@@ -38,3 +38,29 @@ def rb(snd, length=None, speed=None, hz=None, interval=None, ratios=None, crisp=
 
     return out
 
+def spider(snd, numlayers=10, numgrains=20, minlen=40, lenranges=(300,500)):
+    layers = []
+
+    for layer in range(numlayers):
+        lenrange = dsp.rand(lenranges[0], lenranges[1])
+        lengths = dsp.wavetable('hann', numgrains * 2)[:numgrains]
+        lengths = [ dsp.mstf(l * lenrange + minlen) for l in lengths ]
+        pans = dsp.breakpoint([ dsp.rand() for p in range(numgrains / 3)], numgrains)
+
+        startpoint = dsp.randint(0, dsp.flen(snd) - max(lengths))
+    
+        grains = ''
+
+        for l, p in zip(lengths, pans):
+            grain = dsp.cut(snd, startpoint, l)
+            grain = dsp.env(grain, 'phasor')
+            grain = dsp.taper(grain, dsp.mstf(10))
+            grain = dsp.pan(grain, p)
+            
+            grains += grain
+
+        layers += [ dsp.env(grains, 'phasor') ]
+
+    return dsp.mix(layers)
+
+

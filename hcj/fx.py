@@ -38,12 +38,35 @@ def rb(snd, length=None, speed=None, hz=None, interval=None, ratios=None, crisp=
 
     return out
 
-def spider(snd, numlayers=10, numgrains=20, minlen=40, lenranges=(300,500)):
+def renv(snd, low=4, high=20, taper=True):
+    e = [ dsp.rand() for _ in range(dsp.randint(low, high)) ]
+    if taper:
+        e = [0] + e + [0]
+
+    return dsp.taper(dsp.benv(snd, e), 40)
+
+def penv(snd, low=4, high=20):
+    packets = dsp.split(snd, dsp.dsp_grain)
+
+    ptable = dsp.breakpoint([ dsp.rand() for _ in range(dsp.randint(low, high)) ], len(packets))
+    etable = dsp.breakpoint([0] + [ dsp.rand() for _ in range(dsp.randint(low, high)) ] + [0], len(packets))
+
+    packets = [ dsp.pan(p, ptable[i], etable[i]) for i, p in enumerate(packets) ]
+
+    return ''.join(packets)
+
+
+def spider(snd, numlayers=10, numgrains=20, minlen=40, lenranges=(300,500), reverse=False, env='hann'):
     layers = []
 
     for layer in range(numlayers):
         lenrange = dsp.rand(lenranges[0], lenranges[1])
-        lengths = dsp.wavetable('hann', numgrains * 2)[:numgrains]
+
+        if reverse:
+            lengths = dsp.wavetable(env, numgrains * 2)[numgrains:]
+        else:
+            lengths = dsp.wavetable(env, numgrains * 2)[:numgrains]
+
         lengths = [ dsp.mstf(l * lenrange + minlen) for l in lengths ]
         pans = dsp.breakpoint([ dsp.rand() for p in range(numgrains / 3)], numgrains)
 
@@ -59,7 +82,10 @@ def spider(snd, numlayers=10, numgrains=20, minlen=40, lenranges=(300,500)):
             
             grains += grain
 
-        layers += [ dsp.env(grains, 'phasor') ]
+        if reverse:
+            layers += [ dsp.env(grains, 'line') ]
+        else:
+            layers += [ dsp.env(grains, 'phasor') ]
 
     return dsp.mix(layers)
 

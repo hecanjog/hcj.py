@@ -1,5 +1,8 @@
 *.swp
+*.swm
+*.swo
 *.tmp
 *.swn
 *~
 *.pyc
+orc/*.wav

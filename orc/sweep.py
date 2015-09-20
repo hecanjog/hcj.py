@@ -10,9 +10,11 @@ def play(ctl):
         layers = []
 
         for freq in freqs:
-            layer = dsp.pine(snd, dsp.flen(snd) * 16, freq)
-            layer = dsp.pan(layer, dsp.rand())
-            layer = dsp.amp(layer, 0.1)
+            #layer = dsp.pine(snd, dsp.flen(snd) * 16, freq)
+
+            layer = dsp.pan(snd, dsp.rand())
+            layer = dsp.amp(layer, 0.5)
+            layer = dsp.alias(layer)
             layers += [ layer ]
 
         return dsp.mix(layers)
@@ -29,13 +31,15 @@ def play(ctl):
     length = dsp.mstf(lpd.get(2, low=150, high=500))
     pw = lpd.get(1, low=0.1, high=1, default=1)
 
-    freqs = tune.fromdegrees([1,3,5], octave=2, root='e')
+    freqs = tune.fromdegrees([1,3,5], octave=2, root='c')
 
     freq = dsp.randchoose(freqs) / 4.0
 
     #o = dsp.pulsar(freq, length, pw, wf, win, mod, modr, modf, amp)
-    o = dsp.read('/home/hecanjog/sounds/guitarpluck.wav').data
-    o = dsp.fill(o, dsp.stf(0.2))
+    #o = dsp.read('/home/hecanjog/sounds/guitarpluck.wav').data
+    o = dsp.read('sounds/rhodes.wav').data
+    o = dsp.transpose(o, dsp.randchoose([0.5, 1, 2, 1.5, 3]))
+    o = dsp.fill(o, dsp.stf(dsp.rand(0.1, 2)))
 
     out = rain(o, freqs)
 

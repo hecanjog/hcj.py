@@ -1,11 +1,14 @@
 from pippi import dsp
 from pippi import tune
 
-midi = {'lpd': 3}
+midi = {'pc': 3, 'lpd': 7}
 
 def play(ctl):
     param = ctl.get('param')
     lpd = ctl.get('midi').get('lpd')
+
+    pc = ctl.get('midi').get('pc')
+    pc.setOffset(111)
 
     gamut = {
         'high': [
@@ -33,22 +36,27 @@ def play(ctl):
     }
 
     area = param.get('wash-area', default='high')
+    area = dsp.randchoose(['high', 'mid', 'pitch', 'low'])
 
     dsp.log(area)
 
     freqs = dsp.randchoose(gamut[area])
 
-    freqscale = lpd.get(4, low=0.125, high=2, default=1)
+    freqscale = pc.get(13, low=0.125, high=2, default=1)
+    freqscale = dsp.rand(0.125, 2)
 
     low = freqs[0] * freqscale
     high = freqs[1] * freqscale
 
     wform = dsp.randchoose(['sine2pi', 'tri', 'vary', 'square'])
 
-    timescale = lpd.get(2, low=1, high=4, default=1)
-    lengthscale = lpd.get(5, low=0.125, high=2.5)
+    timescale = pc.get(5, low=1, high=4, default=1)
+    timescale = dsp.rand(1, 4)
+    lengthscale = pc.get(12, low=0.125, high=2.5)
+    lengthscale = dsp.rand(0.125, 2.5)
 
-    amp = lpd.get(3, low=0, high=1, default=0.5)
+    amp = pc.get(4, low=0, high=1, default=0.5)
+    amp = dsp.rand(0, 0.5)
 
     if area == 'high':
         low = dsp.rand(low * 0.9, low)
@@ -103,9 +111,9 @@ def play(ctl):
             out = dsp.pad(out, 0, dsp.mstf(500 * timescale * dsp.rand(0.5, 1.5)))
 
 
-    if dsp.rand() > lpd.get(6, low=0, high=1, default=0.75):
+    if dsp.rand() > pc.get(14, low=0, high=1, default=0.75):
         plength = length * dsp.randint(2, 6)
-        freq = tune.ntf(param.get('key', default='g'), octave=dsp.randint(0, 4))
+        freq = tune.ntf(param.get('key', default='c'), octave=dsp.randint(0, 4))
         out = dsp.mix([ dsp.pine(out, plength, freq), dsp.pine(out, plength, freq * 1.25) ])
         out = dsp.fill(out, length)
 

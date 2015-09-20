@@ -1,10 +1,12 @@
 from pippi import dsp
 
-midi = {'lpd': 3}
+midi = {'lpd': 7, 'pc': 3}
 
 def play(ctl):
-    lpd = ctl.get('midi').get('lpd')
+    lpd = ctl.get('midi').get('pc')
     param = ctl.get('param')
+    pc = ctl.get('midi').get('pc')
+    pc.setOffset(111)
 
     chord_index = param.get('chord_index', default=0)
 
@@ -13,7 +15,7 @@ def play(ctl):
         param.set('chord_index', chord_index + 1)
 
     areas = ['high', 'pitch', 'mid', 'low']
-    area = lpd.geti(1, low=0, high=len(areas), default=len(areas))
+    area = lpd.geti(6, low=0, high=len(areas), default=len(areas))
     if area == len(areas):
         area = dsp.randchoose(areas)
     else:

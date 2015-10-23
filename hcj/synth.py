@@ -1,10 +1,13 @@
 from pippi import dsp
 import subprocess
+import math
 
-def speak(lyrics, speed=0.5, voice='icelandic'):
+def speak(lyrics, speed=0.5, voice='icelandic', pitch=1):
     speed = int(speed * 370 + 80)
 
-    cmd = 'espeak -s %s -a 200 -v %s -p 99 --stdout -z "%s"' % (speed, voice, lyrics)
+    pitch = math.floor(pitch * 99.0)
+
+    cmd = 'espeak -s %s -a 200 -v %s -p %s --stdout -z "%s"' % (speed, voice, pitch, lyrics)
 
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
     out, err = p.communicate()

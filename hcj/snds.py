@@ -10,4 +10,3 @@ def path(snd):
 def load(snd):
     """ Return a sound string given a relative path to a sound """
     return dsp.read(path(snd)).data
-

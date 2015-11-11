@@ -13,6 +13,7 @@ complaining. It's cooler to tell them to do something though.
 
 from pippi import dsp
 from pippi import tune
+import fx
 
 def parsebeat(pattern, division, beat, length, callback, swing=0):
     subbeat = (beat * 4) / division
@@ -126,4 +127,30 @@ def clap(length=22050, i=0, amp=0.5, root=3000.0, pw=None):
 
     return k
 
+def roll(snd, length=None, numlayers=2, minlen=10, maxlen=80, env=True, bend=True):
+    layers = []
 
+    for _ in range(numlayers):
+        if length is None:
+            numbeats = dsp.randint(20, 50)
+        else:
+            numbeats = length / dsp.mstf(minlen)
+
+        lengths = dsp.breakpoint([ dsp.rand(minlen, maxlen) for _ in range(dsp.randint(5, numbeats/2)) ], numbeats)
+
+        layer = ''
+        for l in lengths:
+            layer += dsp.fill(snd, dsp.mstf(l), silence=True)
+
+        if bend:
+            layer = fx.bend(layer, [ dsp.rand(0, 1) for _ in range(dsp.randint(5, 20)) ], dsp.rand(0.02, 1))
+
+        if env:
+            layer = fx.penv(layer)
+
+        layers += [ layer ]
+
+    out = dsp.mix(layers)
+    out = dsp.fill(out, length)
+
+    return out

@@ -89,4 +89,26 @@ def spider(snd, numlayers=10, numgrains=20, minlen=40, lenranges=(300,500), reve
 
     return dsp.mix(layers)
 
+def wild(snd, factor=1):
+    snd = dsp.vsplit(snd, 41, 4410)
+    snd = [ dsp.fnoise(l, dsp.rand(0, factor * 0.05)) for l in snd ]
+    snd = [ dsp.amp(dsp.amp(l, dsp.rand(10, factor * 30 + 20)), 0.5) for l in snd ]
+    snd = ''.join(snd)
+
+    return snd
+
+def bend(snd, freqs=None, amount=0.02):
+    out = dsp.split(snd, 441)
+
+    if freqs is None:
+        freqs = dsp.wavetable('sine', len(out))
+    else:
+        freqs = dsp.breakpoint(freqs, len(out))
+
+    freqs = [ freq * amount + (1 - (amount * 0.5)) for freq in freqs ]
+
+    out = [ dsp.transpose(grain, freq) for grain, freq in zip(out, freqs) ]
+
+    return ''.join(out)
+
 

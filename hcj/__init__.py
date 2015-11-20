@@ -24,9 +24,10 @@ class Sampler:
 
         return layers
 
-    def play(self, freq, length):
+    def play(self, freq, length, amp=1):
         snd = dsp.transpose(self.snd, freq / self.freq)
         snd = dsp.taper(snd, 40)
+        snd = dsp.amp(snd, amp)
 
         if self.direction == 'fw':
             snd = dsp.env(snd, self.env)
@@ -47,7 +48,7 @@ class Sampler:
             snd = dsp.fill(sndout, length, silence=False)
 
         if self.direction == 'fw-bw-loop':
-            snd = dsp.fill(snd, length, silence=False)
+            snd = dsp.fill(snd + dsp.reverse(snd), length, silence=False)
             snd = dsp.env(snd, self.env)
 
         if self.tails:

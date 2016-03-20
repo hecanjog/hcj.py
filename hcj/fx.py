@@ -1,6 +1,7 @@
 import subprocess
 from pippi import dsp
 import os
+import random
 
 def rb(snd, length=None, speed=None, hz=None, interval=None, ratios=None, crisp=0, formant=False):
     pid = os.getpid()
@@ -26,15 +27,19 @@ def rb(snd, length=None, speed=None, hz=None, interval=None, ratios=None, crisp=
         # TODO use pippi.tune ratios and calc frequency args
         cmd += [ '--pitch %s' % interval ]
 
-    cmd = ' '.join(cmd) + ' /tmp/infile%s.wav /tmp/outfile%s.wav' % (pid, pid)
+    vpid = pid + random.randint(1, 10000)
 
-    dsp.write(snd, '/tmp/infile%s' % pid, cwd=False)
+    cmd = ' '.join(cmd) + ' /tmp/infile%s.wav /tmp/outfile%s.wav' % (vpid, vpid)
+
+    dsp.write(snd, '/tmp/infile%s' % vpid, cwd=False)
 
     with open(os.devnull, 'w') as devnull:
         p = subprocess.Popen(cmd, stdout=devnull, stderr=devnull, shell=True)
         p.wait()
 
-    out = dsp.read('/tmp/outfile%s.wav' % pid).data
+    out = dsp.read('/tmp/outfile%s.wav' % vpid).data
+    os.remove('/tmp/outfile%s.wav' % vpid)
+    os.remove('/tmp/infile%s.wav' % vpid)
 
     return out
 
@@ -90,8 +95,8 @@ def spider(snd, numlayers=10, numgrains=20, minlen=40, lenranges=(300,500), reve
     return dsp.mix(layers)
 
 def wild(snd, factor=1):
-    snd = dsp.vsplit(snd, 41, 4410)
-    snd = [ dsp.fnoise(l, dsp.rand(0, factor * 0.05)) for l in snd ]
+    snd = dsp.vsplit(snd, 41, 441)
+    #snd = [ dsp.fnoise(l, dsp.rand(0, factor * 0.05)) for l in snd ]
     snd = [ dsp.amp(dsp.amp(l, dsp.rand(10, factor * 30 + 20)), 0.5) for l in snd ]
     snd = ''.join(snd)
 
@@ -110,5 +115,100 @@ def bend(snd, freqs=None, amount=0.02):
     out = [ dsp.transpose(grain, freq) for grain, freq in zip(out, freqs) ]
 
     return ''.join(out)
+
+def glitchStutter(snd):
+    """ Basically a random gate """
+    snd = dsp.vsplit(snd, dsp.mstf(1, 50), dsp.mstf(50, 200))
+
+    for i, s in enumerate(snd):
+        if dsp.rand() > dsp.rand(0.5, 0.9):
+            s = dsp.amp(s, dsp.rand(0, 0.15))
+            s = dsp.taper(s, 20)
+            snd[i] = s
+        else:
+            s = dsp.amp(s, dsp.rand(0.85, 1))
+            snd[i] = dsp.taper(s, 20)
+
+    snd = ''.join(snd)
+
+    return snd
+
+def glitchPulse(snd):
+    """ 2 to 3 overlapping streams of enveloped grains at regular but phasing intervals. """
+
+    numlayers = dsp.randint(2,3)
+
+    layers = []
+    for _ in range(numlayers):
+        grains = dsp.split(snd, dsp.mstf(1, 100))
+        grains = [ dsp.taper(g, 50) for g in grains ]
+        grains = ''.join(grains)
+        grains = penv(grains)
+
+        layers += [ grains ]
+
+    return dsp.mix(layers)
+
+def glitchDetune(snd):
+    """ 2 to 3 overlapping streams of enveloped grains at regular but phasing intervals. """
+
+    numlayers = dsp.randint(2,3)
+
+    layers = []
+    for _ in range(numlayers):
+        grains = dsp.split(snd, dsp.mstf(1, 100))
+        grains = [ dsp.taper(g, 50) for g in grains ]
+        grains = ''.join(grains)
+        grains = penv(grains)
+        grains = bend(grains, [ dsp.rand() for _ in range(dsp.randint(4, 10)) ], dsp.rand(0.001, 0.1))
+
+        layers += [ grains ]
+
+    return dsp.mix(layers)
+
+
+def glitch(snd, types=None):
+    if types is None:
+        types = 'rand'
+    
+    if isinstance(types, basestring):
+        types = types.split(' ')
+
+    assert isinstance(types, list)
+
+    for proctype in types:
+        if proctype == 'stutter':
+            snd = glitchStutter(snd)
+
+        if proctype == 'pulse':
+            snd = glitchPulse(snd)
+
+        if proctype == 'rand':
+            pass
+
+        if proctype == 'rainbow':
+            pass
+
+        if proctype == 'split':
+            pass
+
+        if proctype == 'smear':
+            pass
+
+        if proctype == 'detune':
+            snd = glitchDetune(snd)
+
+        if proctype == 'destroy':
+            pass
+
+        if proctype == 'gliss':
+            pass
+
+        if proctype == 'ring':
+            pass
+
+    return snd
+
+
 
 

@@ -2,6 +2,16 @@ from pippi import dsp
 import fx
 
 class Sampler:
+    """ A keyboard sampler-like abstraction.
+
+    Pass a pitched sample (or any sound) as the first argument and set freq to its 
+    original pitch. Direction controls playback direction, and env is the envelope that 
+    should be applied to the sound. Set tails to true for some synthesized partials in the mixx.
+
+    >>> instrument = Sampler(snd, 220, 'fw-bw', 'saw')
+    >>> instrument.play(880, dsp.stf(1), 0.5)
+
+    """
     def __init__(self, snd, freq=220, direction='fw-loop', env='phasor', tails=False):
         self.snd = snd
         self.freq = freq

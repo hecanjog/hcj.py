@@ -69,7 +69,7 @@ def yourlove(length=22050, i=0, bar=5, amp=0.5, chords=None, root='a', octave=3,
 
     return out
 
-def rhodes(length=22050, freq=220.0, amp=0.5):
+def rhodes(length=22050, freq=220.0, amp=0.5, wavetype='sine'):
     partials = [
             # Multiple, amplitude, duration
             [1, 0.6, 1.0], 
@@ -80,7 +80,7 @@ def rhodes(length=22050, freq=220.0, amp=0.5):
 
     layers = []
     for plist in partials:
-        partial = dsp.tone(freq=plist[0] * freq, length=length, amp=plist[1])
+        partial = dsp.tone(freq=plist[0] * freq, length=length, amp=plist[1], wavetype=wavetype)
 
         env_length = (length * plist[2] * 2) / 32 
         if env_length <= 2:

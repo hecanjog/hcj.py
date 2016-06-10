@@ -1,4 +1,4 @@
-from pippi import dsp
+from pippi import dsp, tune
 import os
 import glob
 
@@ -16,20 +16,24 @@ def search(pattern):
     files = glob.glob(path(pattern))
     return [ load(snd) for snd in files ]
 
-def iowa(inst, pitch=None):
-    if pitch is None:
-        pitch = 'c4'
-
-    pitch = pitch[0].upper() + pitch[1:]
-
-    path = os.path.join(snddir, 'iowa/%s/*%s*.wav' % (inst, pitch))
+def getMatches(inst, midi_note, wildcard=''):
+    inst = inst.lower()
+    path = os.path.join(snddir, 'iowa/%s/%s.%s.%s*.wav' % (inst, midi_note, inst, wildcard))
     dsp.log(path)
-
     files = glob.glob(path)
 
-    if len(files) == 0:
-        raise ValueError('No matching pitch (%s) found for %s' % (pitch, inst))
+    if len(files) == 0 and midi_note > 120:
+        raise ValueError('No matching pitch (%s) found for %s' % (midi_note, inst))
+    elif len(files) == 0:
+        midi_note += 12
+        files = getMatches(inst, midi_note)
 
+    return files
+
+def iowa(inst, freq=440, wildcard=''):
+    midi_note = tune.ftomi(freq)
+
+    files = getMatches(inst, midi_note, wildcard)
     filename = dsp.randchoose(files)
 
     return dsp.read(filename).data

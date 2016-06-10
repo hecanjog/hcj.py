@@ -1,5 +1,6 @@
 from pippi import dsp
 from pippi import tune
+import fx, snds
 
 def pulsar(freq, length=22050, drift=0.01, speed=0.5, amp=0.1, pulsewidth=None, env='flat', wf=None, mod=None):
     if wf is None:
@@ -116,3 +117,51 @@ def chippy(length=22050, freq=220, amp=0.5):
     out = dsp.pulsar(freq, length, pw, wfrm, wndw, modw, modr, modf, amp)
 
     return out
+
+def brass(length=22050, freq=220, amp=0.5):
+    pw = dsp.rand(0.25, 0.5)
+    note = pulsar(length=length, freq=freq, pulsewidth=pw, amp=amp)
+    noise = dsp.bln(length, dsp.rand(1000, 2000), dsp.rand(2000, 3000))
+    noise = dsp.fill(noise, length)
+    noise = fx.bend(noise, [ dsp.rand() for _ in range(dsp.randint(5, 10)) ], dsp.rand(0.01, 0.3))
+    noise = dsp.amp(noise, dsp.rand(0.001, 0.002))
+    noise = dsp.env(noise, 'tri')
+    note = dsp.mix([ note, noise ])
+
+    return note
+
+def bell(length=22050, freq=220, amp=0.5):
+    ding = dsp.read('/home/hecanjog/sounds/vibesc1.wav').data
+    ding = dsp.amp(ding, dsp.rand(0.5, 0.8))
+
+    bell = dsp.read('/home/hecanjog/sounds/tones/bellc.wav').data
+    bell = dsp.amp(bell, dsp.rand(10, 50))
+    bell = dsp.amp(bell, 0.3)
+
+    rhodes = dsp.read('/home/hecanjog/sounds/tones/rhodes.wav').data
+    rhodes = dsp.transpose(rhodes, 1.2)
+    rhodes = dsp.pan(rhodes, dsp.rand())
+
+    glade = dsp.read('/home/hecanjog/sounds/glade.wav').data
+    numgs = dsp.randint(2, 6)
+
+    gs = []
+    for _ in range(numgs):
+        g = dsp.rcut(glade, dsp.mstf(100, 500))
+        g = dsp.amp(g, dsp.rand(0.2, 0.5))
+        g = dsp.pan(g, dsp.rand())
+        g = dsp.transpose(g, dsp.rand(0.15, 0.75))
+
+        gs += [ g ]
+
+    gs = dsp.mix(gs)
+    gs = dsp.env(gs, 'phasor')
+
+    clump = dsp.mix([ ding, gs, bell, rhodes ])
+
+    clump = dsp.transpose(clump, freq / tune.ntf('c', octave=4))
+    clump = dsp.fill(clump, length, silence=True)
+    clump = dsp.env(clump, 'phasor')
+    clump = dsp.amp(clump, amp)
+
+    return clump

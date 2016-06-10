@@ -15,6 +15,42 @@ from pippi import dsp
 from pippi import tune
 import fx
 
+def toonsets(notes, beat):
+    out = []
+    elapsed = 0
+    for note in notes:
+        if note > 0:
+            out += [ elapsed ]
+
+        elapsed += beat
+
+    return out
+
+def pattern(pat, length=None, beat=None):
+    num_notes = len(pat)
+
+    if length is not None and beat is not None:
+        num_notes = length / beat
+
+    if length is not None and beat is None:
+        num_notes = length
+
+    rests = ('.', ' ', ',', 0)
+    notes = []
+
+    for i in range(num_notes):
+        tick = pat[ i % len(pat) ]
+
+        if tick in rests:
+            notes += [ 0 ]
+        else:
+            notes += [ 1 ]
+
+    if beat is not None:
+        notes = toonsets(notes, beat)
+
+    return notes
+
 def parsebeat(pattern, division, beat, length, callback, swing=0):
     subbeat = (beat * 4) / division
     nbeats = length / subbeat

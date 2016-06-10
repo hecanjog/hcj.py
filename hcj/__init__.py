@@ -66,4 +66,20 @@ class Sampler:
 
         return snd
 
+class Tracks:
+    def __init__(self):
+        self.tracks = []
 
+    def add(self, snd, onset=0):
+        self.tracks += [ dsp.pad(snd, onset, 0) ]
+
+    def mix(self, length=None):
+        self.tracks = sorted(self.tracks, key=lambda x: dsp.flen(x))
+        #self.tracks.reverse()
+        out = dsp.mix(self.tracks)
+
+        if length is not None:
+            out = dsp.fill(out, length)
+
+        return out
+ 

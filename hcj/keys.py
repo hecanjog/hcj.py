@@ -2,6 +2,8 @@ from pippi import dsp
 from pippi import tune
 import fx, snds
 
+from . import Tracks
+
 def pulsar(freq, length=22050, drift=0.01, speed=0.5, amp=0.1, pulsewidth=None, env='flat', wf=None, mod=None):
     if wf is None:
         waveform = dsp.wavetable('sine2pi')
@@ -118,7 +120,7 @@ def chippy(length=22050, freq=220, amp=0.5):
 
     return out
 
-def brass(length=22050, freq=220, amp=0.5):
+def brass(length=22050, freq=220, amp=0.5, trill=None):
     pw = dsp.rand(0.25, 0.5)
     note = pulsar(length=length, freq=freq, pulsewidth=pw, amp=amp)
     noise = dsp.bln(length, dsp.rand(1000, 2000), dsp.rand(2000, 3000))
@@ -128,11 +130,52 @@ def brass(length=22050, freq=220, amp=0.5):
     noise = dsp.env(noise, 'tri')
     note = dsp.mix([ note, noise ])
 
+    if trill is not None:
+        unison = brass(length, freq, amp)
+
+        try:
+            slowest, fastest = trill
+        except TypeError:
+            slowest = int(trill * 1.5)
+            fastest = int(trill * 0.5)
+
+        track = Tracks()
+
+        elapsed = 0
+        count = 0
+        readoffset = [0, 0]
+        writeoffset = 0
+        sndlength = dsp.randint(fastest, slowest)
+        crosslength = fastest/2
+
+        numpoints = dsp.randint(3, 6)
+        points = [ dsp.randint(fastest, slowest) for _ in range(numpoints) ] 
+        steps = length / fastest
+        sndlengths = dsp.breakpoint(points, steps)
+
+        while elapsed <= length:
+            sndlength = int(sndlengths[count % steps])
+            snd = [note, unison][count % 2]
+            snd = dsp.cut(snd, readoffset[count % 2], sndlength)
+            snd = dsp.env(snd, 'sine')
+            snd = dsp.taper(snd, 20)
+
+            track.add(snd, writeoffset)
+
+            count += 1
+            writeoffset += sndlength - crosslength
+            readoffset[count % 2] += sndlength
+            elapsed += sndlength
+
+        note = track.mix()
+
     return note
+
 
 def bell(length=22050, freq=220, amp=0.5):
     ding = dsp.read('/home/hecanjog/sounds/vibesc1.wav').data
     ding = dsp.amp(ding, dsp.rand(0.5, 0.8))
+    ding = fx.bend(ding, [ dsp.rand() for _ in range(dsp.randint(5, 10)) ], dsp.rand(0, 0.02))
 
     bell = dsp.read('/home/hecanjog/sounds/tones/bellc.wav').data
     bell = dsp.amp(bell, dsp.rand(10, 50))
